@@ -1,0 +1,7 @@
+---
+
+- name: docker-composeのインストール
+  get_url:
+    url: '{{ download_url }}'
+    dest: /usr/local/bin/docker-compose
+    mode: +x
