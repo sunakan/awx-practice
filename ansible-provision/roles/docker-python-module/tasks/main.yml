@@ -1,0 +1,8 @@
+---
+
+- name: pip3でdocker等のモジュールをインストール
+  become: yes
+  pip:
+    name:
+      - docker
+      - docker-compose

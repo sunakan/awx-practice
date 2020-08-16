@@ -15,3 +15,6 @@
   - debug: var=ansible_connection
   - debug: var=ansible_system
   - debug: var=ansible_architecture
+  - debug: var={{ lookup('env','USER') }}
+  - debug: var=hostvars[inventory_hostname]
+  - debug: var=ansible_os_family

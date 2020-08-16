@@ -1,0 +1,133 @@
+version: '3.7'
+
+services:
+  web:
+    image: ansible/awx:14.0.0
+    hostname: awx-web
+    container_name: awx-web
+    networks:
+      - awx-net
+    user: root
+    depends_on:
+      - redis
+    ports:
+      - 80:8052
+    volumes:
+      - type: volume
+        source: supervisor-socket
+        target: /var/run/supervisor/
+      - type: volume
+        source: rsyslog-socket
+        target: /var/run/awx-rsyslog/
+      - type: volume
+        source: rsyslog-config
+        target: /var/lib/awx/rsyslog/
+      - type: bind
+        source: ./awx/SECRET_KEY
+        target: /etc/tower/SECRET_KEY
+        read_only: true
+      - type: bind
+        source: ./awx/environment.sh
+        target: /etc/tower/conf.d/environment.sh
+      - type: bind
+        source: ./awx/credentials.py
+        target: /etc/tower/conf.d/credentials.py
+      - type: bind
+        source: ./awx/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+      - type: bind
+        source: ${REDIS_SOCKET_DIR_PATH}
+        target: /var/run/redis/
+      - type: bind
+        source: ${AWX_PROJECTS_DIR_PATH}
+        target: /var/lib/awx/projects/
+
+  task:
+    image: ansible/awx:14.0.0
+    hostname: awx-task
+    container_name: awx-task
+    networks:
+      - awx-net
+    user: root
+    depends_on:
+      - redis
+      - web
+    command: /usr/bin/launch_awx_task.sh
+    volumes:
+      - type: volume
+        source: supervisor-socket
+        target: /var/run/supervisor/
+      - type: volume
+        source: rsyslog-socket
+        target: /var/run/awx-rsyslog/
+      - type: volume
+        source: rsyslog-config
+        target: /var/lib/awx/rsyslog/
+      - type: bind
+        source: ./awx/SECRET_KEY
+        target: /etc/tower/SECRET_KEY
+        read_only: true
+      - type: bind
+        source: ./awx/environment.sh
+        target: /etc/tower/conf.d/environment.sh
+      - type: bind
+        source: ./awx/credentials.py
+        target: /etc/tower/conf.d/credentials.py
+      - type: bind
+        source: ${REDIS_SOCKET_DIR_PATH}
+        target: /var/run/redis/
+      - type: bind
+        source: ${AWX_PROJECTS_DIR_PATH}
+        target: /var/lib/awx/projects/
+    environment:
+      SUPERVISOR_WEB_CONFIG_PATH: '/etc/supervisord.conf'
+
+  redis:
+    image: redis
+    hostname: awx-redis
+    container_name: awx-redis
+    networks:
+      - awx-net
+    command: ["/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - type: bind
+        source: ./redis/redis.conf
+        target: /usr/local/etc/redis/redis.conf
+        read_only: true
+      - type: bind
+        source: ${REDIS_SOCKET_DIR_PATH}
+        target: /var/run/redis/
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 50M
+
+  postgres:
+    image: postgres:10
+    hostname: awx-postgres
+    container_name: awx-postgres
+    networks:
+      - awx-net
+    volumes:
+      - type: bind
+        source: ${AWX_DATABASE_DIR_PATH}
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: awx
+      POSTGRES_PASSWORD: awxpass
+      POSTGRES_DB: awx
+
+volumes:
+  supervisor-socket:
+  rsyslog-socket:
+  rsyslog-config:
+
+networks:
+  awx-net:
+    name: awx-net
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.0.248/29

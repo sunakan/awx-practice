@@ -23,6 +23,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     machine.vm.synced_folder './ansible-provision', '/home/vagrant/ansible-provision',
       create: true, type: :rsync, owner: :vagrant, group: :vagrant,
       rsync__exclude: ['*.swp']
+    machine.vm.synced_folder './awx', '/home/vagrant/awx',
+      create: true, type: :rsync, owner: :vagrant, group: :vagrant,
+      rsync__exclude: ['*.swp']
+
     # vagrant-hosts pluginで各VM同士がhost名でアクセス可能
     machine.vm.provision 'shell', privileged: false, inline: <<-SHELL
       sudo apt update
