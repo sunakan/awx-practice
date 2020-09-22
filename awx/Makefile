@@ -38,6 +38,6 @@ clean:
 	make down
 	docker network prune
 	docker volume prune
-	rm -rf $(REDIS_SOCKET_DIR_PATH)
-	rm -rf $(AWX_PROJECTS_DIR_PATH)
-	rm -rf $(AWX_DATABASE_DIR_PATH)
+	sudo rm -rf $(REDIS_SOCKET_DIR_PATH)
+	sudo rm -rf $(AWX_PROJECTS_DIR_PATH)
+	sudo rm -rf $(AWX_DATABASE_DIR_PATH)
